@@ -45,7 +45,6 @@ async def main():
         "bot"        : user.bot,
     } for user in users]).to_csv(f"{name.replace(" ", "_")}_users.csv", index=False)
 
-
     #
     # Get all messages in chat between two dates
     # For each message, save the id, the date, the
@@ -53,25 +52,25 @@ async def main():
     # someone else
     #
 
-    ts       = datetime.datetime(2025, 12, 1,  tzinfo=datetime.timezone.utc)
-    te       = datetime.datetime(2025, 12, 25, tzinfo=datetime.timezone.utc)
+    ts       = datetime.datetime(2025, 1,  1,  tzinfo=datetime.timezone.utc)
+    te       = datetime.datetime(2025, 12, 31, tzinfo=datetime.timezone.utc)
     messages = await client.messages_between_dates(chat, ts, te)
     print(f"[info]: there are {len(messages)} messages in the chat named {name}")
 
     records = []
-    columns = ["id", "date", "text", "sender", "reactions"]
+    columns = ["id", "date", "text", "sender"]
     for m in messages:
         id        = m.id
         date      = m.date
         text      = m.message
         sender    = m.from_id.user_id
         reactions = m.reactions
-        if len(text) > 0:
-            streak = ""
-            if reactions:
-                for r in reactions.results:
-                    streak += f"{r.reaction.emoticon}:{r.count} "
-            records.append([id, date, text, sender, reactions])
+        if text and len(text) > 0:
+            # streak = ""
+            # if reactions:
+            #     for r in reactions.results:
+            #         streak += f"{r.reaction.emoticon}:{r.count} "
+            records.append([id, date, text, sender])
     pd.DataFrame(records, columns=columns).to_csv(f"{name.replace(' ', '_')}_messages.csv", index=False)
 
     await client.disconnect()
