@@ -2,3 +2,5 @@ out
 .venv
 __pycache__
 telegram_*
+*.csv
+.env
