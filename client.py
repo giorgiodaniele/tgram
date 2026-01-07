@@ -1,5 +1,6 @@
 import telethon
 import datetime
+import asyncio
 
 class Client:
     def __init__(self, api_hash, api_id):
@@ -28,9 +29,53 @@ class Client:
     async def all_messages_in_chat(self, chat_id, n):
         return await self.client.get_messages(chat_id, limit=n)
     
-    async def my_messages_in_chat(self, chat_id, n):
-        return await self.client.get_messages(chat_id, limit=n, from_user="me")
+    # async def my_messages_in_chat(self, chat_id, n):
+    #     return await self.client.get_messages(chat_id, limit=n, from_user="me")
     
+    async def canc_my_messages(
+        self,
+        chat_id,
+        ts,
+        te,
+        batch_size: int = 100
+    ):
+
+
+        batch = []
+        total = 0
+
+        async for msg in self.client.iter_messages(chat_id, from_user="me"):
+
+            if msg.date < ts:
+                break
+
+            if msg.date > te:
+                continue
+
+            batch.append(msg.id)
+
+            if len(batch) >= batch_size:
+                try:
+                    await self.client.delete_messages(chat_id, batch)
+                    total += len(batch)
+                    batch.clear()
+
+                    # avoid flood
+                    await asyncio.sleep(0.7)
+
+                except Exception as e:
+                    print(f"[warn] batch delete failed ({len(batch)} msgs): {e}")
+                    batch.clear()
+
+        if batch:
+            try:
+                await self.client.delete_messages(chat_id, batch)
+                total += len(batch)
+            except Exception as e:
+                print(f"[warn] final batch failed ({len(batch)} msgs): {e}")
+
+        print(f"[info] deleted {total} messages")
+        
     # async def canc_all_messages(self, dialog_id, message_ids):
     #     await self.client.delete_messages(dialog_id, message_ids)
     

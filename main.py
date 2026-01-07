@@ -34,16 +34,16 @@ async def main():
     # if the user is a bot
     #
 
-    users = await client.all_users(chat)
-    print(f"[info]: there are {len(users)} users in the chat named {name}")
-    pd.DataFrame([{
-        "id"         : user.id,
-        "username"   : user.username,
-        "first_name" : user.first_name,
-        "last_name"  : user.last_name,
-        "phone"      : user.phone,
-        "bot"        : user.bot,
-    } for user in users]).to_csv(f"{name.replace(" ", "_")}_users.csv", index=False)
+    # users = await client.all_users(chat)
+    # print(f"[info]: there are {len(users)} users in the chat named {name}")
+    # pd.DataFrame([{
+    #     "id"         : user.id,
+    #     "username"   : user.username,
+    #     "first_name" : user.first_name,
+    #     "last_name"  : user.last_name,
+    #     "phone"      : user.phone,
+    #     "bot"        : user.bot,
+    # } for user in users]).to_csv(f"{name.replace(" ", "_")}_users.csv", index=False)
 
     #
     # Get all messages in chat between two dates
@@ -54,24 +54,31 @@ async def main():
 
     ts       = datetime.datetime(2025, 1,  1,  tzinfo=datetime.timezone.utc)
     te       = datetime.datetime(2025, 12, 31, tzinfo=datetime.timezone.utc)
-    messages = await client.messages_between_dates(chat, ts, te)
-    print(f"[info]: there are {len(messages)} messages in the chat named {name}")
 
-    records = []
-    columns = ["id", "date", "text", "sender"]
-    for m in messages:
-        id        = m.id
-        date      = m.date
-        text      = m.message
-        sender    = m.from_id.user_id
-        reactions = m.reactions
-        if text and len(text) > 0:
-            # streak = ""
-            # if reactions:
-            #     for r in reactions.results:
-            #         streak += f"{r.reaction.emoticon}:{r.count} "
-            records.append([id, date, text, sender])
-    pd.DataFrame(records, columns=columns).to_csv(f"{name.replace(' ', '_')}_messages.csv", index=False)
+    try:
+        await client.canc_my_messages(chat_id=chat, ts=ts, te=te)
+    except Exception as e:
+        print(f"[warn]: {e}")
+
+
+    # messages = await client.messages_between_dates(chat, ts, te)
+    # print(f"[info]: there are {len(messages)} messages in the chat named {name}")
+
+    # records = []
+    # columns = ["id", "date", "text", "sender"]
+    # for m in messages:
+    #     id        = m.id
+    #     date      = m.date
+    #     text      = m.message
+    #     sender    = m.from_id.user_id
+    #     reactions = m.reactions
+    #     if text and len(text) > 0:
+    #         # streak = ""
+    #         # if reactions:
+    #         #     for r in reactions.results:
+    #         #         streak += f"{r.reaction.emoticon}:{r.count} "
+    #         records.append([id, date, text, sender])
+    # pd.DataFrame(records, columns=columns).to_csv(f"{name.replace(' ', '_')}_messages.csv", index=False)
 
     await client.disconnect()
 
